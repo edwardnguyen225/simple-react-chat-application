@@ -6,7 +6,7 @@ import Sidebar from "./Sidebar";
 import { WebSocketConnector } from "./WebSocketConnector";
 import Welcome from "./Welcome";
 
-const WS_URL = "wss://0q4bb2oi5i.execute-api.us-east-1.amazonaws.com/dev";
+const WS_URL = process.env.REACT_APP_WEBSOCKET_PORT;
 const connector = new WebSocketConnector();
 
 function App() {
@@ -114,11 +114,11 @@ function App() {
 
   return (
     <div className="flex">
-        <Sidebar
-          me={nickname}
-          clients={clients}
-          setTarget={(target) => setNewTarget(target)}
-        />
+      <Sidebar
+        me={nickname}
+        clients={clients}
+        setTarget={(target) => setNewTarget(target)}
+      />
       <div className="flex-auto">
         <Conversation
           target={target}
