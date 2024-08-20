@@ -1,4 +1,4 @@
 export type MessageItem = {
-  sender: string;
-  message: string;
+  senderId: string;
+  content: string;
 };

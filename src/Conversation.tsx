@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Conversation.css";
 import { MessageItem } from "./MessageItem";
+import { User } from "./types";
 
 export default function Conversation({
-  target,
+  me,
+  targetUser,
   messages,
   sendMessage,
 }: {
-  target: string;
+  me: User;
+  targetUser: User;
   messages: MessageItem[];
   sendMessage: (value: string) => void;
 }) {
@@ -23,19 +26,20 @@ export default function Conversation({
   });
 
   const messagesGroupedBySender = messages.reduce((prev, curr) => {
-    if (prev.length > 0 && curr.sender === prev[prev.length - 1].sender) {
-      prev[prev.length - 1].messages.push(curr.message);
+    if (prev.length > 0 && curr.senderId === prev[prev.length - 1].sender.id) {
+      prev[prev.length - 1].messages.push(curr.content);
       return prev;
     } else {
+      const sender = curr.senderId === me.id ? me : targetUser;
       return [
         ...prev,
         {
-          sender: curr.sender,
-          messages: [curr.message],
+          sender,
+          messages: [curr.content],
         },
       ];
     }
-  }, [] as { sender: string; messages: string[] }[]);
+  }, [] as { sender: User; messages: string[] }[]);
 
   const submit = () => {
     setMessage("");
@@ -48,13 +52,13 @@ export default function Conversation({
       <div className="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">
         <div className="flex items-center space-x-4">
           <img
-            src={`doggos/${target}.jpeg`}
+            src={targetUser.avatar}
             alt=""
             className="w-10 sm:w-16 h-10 sm:h-16 rounded-full"
           />
           <div className="flex flex-col leading-tight">
             <div className="text-2xl mt-1 flex items-center">
-              <span className="text-gray-700 mr-3">{target}</span>
+              <span className="text-gray-700 mr-3">{targetUser.name}</span>
               <span className="text-green-500">
                 <svg width="10" height="10">
                   <circle cx="5" cy="5" r="5" fill="currentColor"></circle>
@@ -74,12 +78,12 @@ export default function Conversation({
               <div key={key} className="chat-message">
                 <div
                   className={`flex items-end${
-                    group.sender === target ? "" : " justify-end"
+                    group.sender.id === targetUser.id ? "" : " justify-end"
                   }`}
                 >
                   <div
                     className={`flex flex-col space-y-2 text-xs max-w-xs mx-2 ${
-                      group.sender === target
+                      group.sender.id === targetUser.id
                         ? "order-2 items-start"
                         : "order-1 items-end"
                     }`}
@@ -88,7 +92,7 @@ export default function Conversation({
                       <div key={key}>
                         <span
                           className={`px-4 py-2 rounded-lg inline-block ${
-                            group.sender === target
+                            group.sender.id === targetUser.id
                               ? "rounded-bl-none bg-gray-300 text-gray-600"
                               : "rounded-br-none bg-blue-600 text-white"
                           }`}
@@ -99,10 +103,10 @@ export default function Conversation({
                     ))}
                   </div>
                   <img
-                    src={`doggos/${group.sender}.jpeg`}
+                    src={group.sender.avatar}
                     alt="My profile"
                     className={`w-6 h-6 rounded-full order-${
-                      group.sender === target ? 1 : 2
+                      group.sender.id === targetUser.id ? 1 : 2
                     }`}
                   />
                 </div>

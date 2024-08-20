@@ -5,56 +5,60 @@ import { MessageItem } from "./MessageItem";
 import Sidebar from "./Sidebar";
 import { WebSocketConnector } from "./WebSocketConnector";
 import Welcome from "./Welcome";
+import { User } from "./types";
+import { mockUsers } from "./mocks";
 
 const WS_URL = process.env.REACT_APP_WEBSOCKET_PORT;
 const connector = new WebSocketConnector();
 
 function App() {
-  const [nickname, setNickname] = useState<string>(
-    window.localStorage.getItem("nickname") || ""
+  const clients = mockUsers;
+
+  const [user, setUser] = useState<User>(
+    JSON.parse(window.localStorage.getItem("user") || "{}")
   );
-  const [clients, setClients] = useState<string[]>([]);
-  const [target, setTarget] = useState<string>(
-    window.localStorage.getItem("lastTarget") || ""
+  const [targetUser, setTargetUser] = useState<User>(
+    JSON.parse(window.localStorage.getItem("lastTargetUser") || "{}")
   );
+
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const webSocket = useRef(connector);
 
-  const loadMessages = (target: string) => {
+  const loadMessages = (target: User) => {
     webSocket.current.getConnection(url).send(
       JSON.stringify({
         action: "getMessages",
-        targetNickname: target,
+        targetId: target.id,
         limit: 1000,
       })
     );
   };
 
-  const setNewTarget = (target: string) => {
-    setTarget(target);
+  const setNewTarget = (target: User) => {
+    setTargetUser(target);
     setMessages([]);
     loadMessages(target);
   };
 
   useEffect(() => {
-    window.localStorage.setItem("nickname", nickname);
-    window.localStorage.setItem("lastTarget", target);
+    window.localStorage.setItem("user", JSON.stringify(user));
+    window.localStorage.setItem("lastTargetUser", JSON.stringify(targetUser));
   });
 
-  if (nickname === "") {
+  if (!user.name || user.name === "") {
     return (
       <Welcome
-        setNickname={(nickname) => {
-          setNickname(nickname);
-          if (target === "") {
-            setTarget(nickname);
+        setUser={(user) => {
+          setUser(user);
+          if (targetUser.id === "") {
+            setTargetUser(user);
           }
         }}
       />
     );
   }
 
-  const url = `${WS_URL}?nickname=${nickname}`;
+  const url = `${WS_URL}?userId=${user.id}`;
   const ws = webSocket.current.getConnection(url);
 
   ws.onmessage = (event) => {
@@ -63,11 +67,6 @@ function App() {
       value: unknown;
     };
     console.log(msg);
-    if (msg.type === "clients") {
-      setClients(
-        (msg.value as { nickname: string }[]).map((c) => c.nickname).sort()
-      );
-    }
 
     if (msg.type === "messages") {
       const body = msg.value as {
@@ -80,7 +79,7 @@ function App() {
 
     if (msg.type === "message") {
       const item = msg.value as MessageItem;
-      if (item.sender === nickname || item.sender !== target) {
+      if (item.senderId === user.id || item.senderId !== targetUser.id) {
         return;
       }
       setMessages([...messages, item]);
@@ -88,26 +87,22 @@ function App() {
   };
 
   ws.onopen = () => {
-    webSocket.current
-      .getConnection(url)
-      .send(JSON.stringify({ action: "getClients" }));
-
-    loadMessages(target);
+    loadMessages(targetUser);
   };
 
   const sendMessage = (value: string) => {
     webSocket.current.getConnection(url).send(
       JSON.stringify({
         action: "sendMessage",
-        recipientNickname: target,
-        message: value,
+        recipientId: targetUser.id,
+        content: value,
       })
     );
     setMessages([
       ...messages,
       {
-        message: value,
-        sender: nickname,
+        content: value,
+        senderId: user.id,
       },
     ]);
   };
@@ -115,13 +110,14 @@ function App() {
   return (
     <div className="flex">
       <Sidebar
-        me={nickname}
+        me={user}
         clients={clients}
         setTarget={(target) => setNewTarget(target)}
       />
       <div className="flex-auto">
         <Conversation
-          target={target}
+          me={user}
+          targetUser={targetUser}
           messages={messages}
           sendMessage={sendMessage}
         />
