@@ -17,7 +17,7 @@ export default function Sidebar({
           <div className="flex items-center space-x-2">
             <img src={me.avatar} alt="" className="w-8 rounded-full" />
             <div className="text-2xl invisible md:visible">
-              <span className="text-gray-700 mr-3 font-bold">Chats</span>
+              <span className="text-gray-700 mr-3 font-bold">{me.name}</span>
             </div>
           </div>
         </div>
