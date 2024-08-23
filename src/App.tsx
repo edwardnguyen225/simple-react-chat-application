@@ -17,9 +17,15 @@ function App() {
   const [user, setUser] = useState<User>(
     JSON.parse(window.localStorage.getItem("user") || "{}")
   );
-  const [targetUser, setTargetUser] = useState<User>(
-    JSON.parse(window.localStorage.getItem("lastTargetUser") || "{}")
-  );
+  // const [targetUser, setTargetUser] = useState<User>(
+  //   JSON.parse(window.localStorage.getItem("lastTargetUser") || "{}")
+  // );
+
+  const targetUser: User = {
+    id: "000",
+    name: "Administrator",
+    avatar: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png",
+  };
 
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const webSocket = useRef(connector);
@@ -35,7 +41,7 @@ function App() {
   };
 
   const setNewTarget = (target: User) => {
-    setTargetUser(target);
+    setUser(target);
     setMessages([]);
     loadMessages(target);
   };
@@ -51,7 +57,7 @@ function App() {
         setUser={(user) => {
           setUser(user);
           if (targetUser.id === "") {
-            setTargetUser(user);
+            setUser(user);
           }
         }}
       />
