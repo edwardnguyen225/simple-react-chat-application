@@ -4,6 +4,7 @@ export interface MessageItem {
   messageContent: string;
   senderId: string;
   createdAt: Date;
+  mediaName: string;
   mediaType: string;
   mediaUrl: string;
 }
