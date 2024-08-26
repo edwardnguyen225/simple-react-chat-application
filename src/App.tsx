@@ -7,6 +7,7 @@ import { WebSocketConnector } from "./WebSocketConnector";
 import Welcome from "./Welcome";
 import { User } from "./types";
 import { mockUsers } from "./mocks";
+import { getRoomIdFromUserIds } from "./utils";
 
 const WS_URL = process.env.REACT_APP_WEBSOCKET_PORT;
 const connector = new WebSocketConnector();
@@ -17,6 +18,8 @@ function App() {
   const [user, setUser] = useState<User>(
     JSON.parse(window.localStorage.getItem("user") || "{}")
   );
+  const [isLoading, setIsLoading] = useState(true);
+
   // const [targetUser, setTargetUser] = useState<User>(
   //   JSON.parse(window.localStorage.getItem("lastTargetUser") || "{}")
   // );
@@ -26,6 +29,7 @@ function App() {
     name: "Administrator",
     avatar: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png",
   };
+  const roomId = getRoomIdFromUserIds([user.id, targetUser.id]);
 
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const webSocket = useRef(connector);
@@ -81,6 +85,7 @@ function App() {
       };
 
       setMessages([...body.messages.reverse(), ...messages]);
+      setIsLoading(false);
     }
 
     if (msg.type === "message") {
@@ -93,29 +98,36 @@ function App() {
   };
 
   ws.onopen = () => {
+    setIsLoading(true);
     loadMessages(targetUser);
   };
 
-  const sendMessage = (value: string) => {
+  const sendMessage = (message: {
+    messageContent: string;
+    mediaName?: string;
+    mediaType?: string;
+    mediaUrl?: string;
+  }) => {
     const newMessage = {
-      action: "sendMessage",
-      recipientId: targetUser.id,
-      messageContent: value,
-      // mediaType: 'text',
-      // mediaUrl: '',
+      messageContent: message.messageContent,
+      mediaName: message.mediaName || "",
+      mediaType: message.mediaType || "",
+      mediaUrl: message.mediaUrl || "",
     };
 
-    webSocket.current.getConnection(url).send(JSON.stringify(newMessage));
+    webSocket.current.getConnection(url).send(JSON.stringify({
+      action: "sendMessage",
+      recipientId: targetUser.id,
+      ...newMessage
+    }));
     setMessages([
       ...messages,
       {
-        roomId: "000",
+        ...newMessage,
+        roomId,
         messageId: Math.random().toString(36).substr(2, 9),
-        messageContent: value,
         senderId: user.id,
         createdAt: new Date(),
-        mediaType: "",
-        mediaUrl: "",
       },
     ]);
   };
@@ -129,10 +141,12 @@ function App() {
       />
       <div className="flex-auto">
         <Conversation
+          roomId={roomId}
           me={user}
           targetUser={targetUser}
           messages={messages}
           sendMessage={sendMessage}
+          isLoading={isLoading}
         />
       </div>
     </div>

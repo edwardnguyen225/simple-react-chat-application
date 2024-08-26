@@ -3,19 +3,33 @@ import "./Conversation.css";
 import { MessageItem } from "./MessageItem";
 import { User } from "./types";
 
+export const API_URL = process.env.REACT_APP_API_URL;
+
 export default function Conversation({
+  roomId,
   me,
   targetUser,
   messages,
   sendMessage,
+  isLoading,
 }: {
+  roomId: string;
   me: User;
   targetUser: User;
   messages: MessageItem[];
-  sendMessage: (value: string) => void;
+  isLoading: boolean;
+  sendMessage: (message: {
+    messageContent: string;
+    mediaName?: string;
+    mediaType?: string;
+    mediaUrl?: string;
+  }) => void;
 }) {
   const [message, setMessage] = useState<string>("");
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, setFile] = useState<File | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,9 +55,71 @@ export default function Conversation({
     }
   }, [] as { sender: User; messages: MessageItem[] }[]);
 
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      setFile(file);
+      const url = await uploadFileAsync(file);
+
+      sendMessage({
+        messageContent: "",
+        mediaName: file.name,
+        mediaType: url.mediaType,
+        mediaUrl: url.mediaUrl,
+      });
+    }
+  };
+
+  const uploadFileAsync = async (file: File) => {
+    console.log("🚀 ~ uploadFileAsync ~ file:", file);
+
+    const fileName = file.name;
+    const body = {
+      roomId,
+      userId: me.id,
+      fileName,
+    };
+    const response = await fetch(`${API_URL}/uploadFile`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    const uploadResponse = (await response.json()) as {
+      file: {
+        id: string;
+        fileName: string;
+        roomId: string;
+        userId: string;
+        createdAt: number;
+      };
+      uploadUrl: string;
+    };
+
+    await fetch(uploadResponse.uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type,
+      },
+    });
+
+    const { mediaUrl } = await fetch(`${API_URL}/getFile`, {
+      method: "POST",
+      body: JSON.stringify({ fileId: uploadResponse.file.id }),
+    }).then((res) => res.json());
+
+    return {
+      mediaName: fileName,
+      mediaType: file.type,
+      mediaUrl,
+    };
+  };
+
   const submit = () => {
     setMessage("");
-    sendMessage(message);
+    sendMessage({
+      messageContent: message,
+    });
     scrollToBottom();
   };
 
@@ -72,7 +148,19 @@ export default function Conversation({
         id="messages"
         className="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch h-screen"
       >
-        {messages.length > 0 ? (
+        {isLoading ? (
+          <div className="chat-message">
+            <div className="flex items-center">
+              <div className="flex flex-col space-y-2 text-xs max-w-xs mx-2">
+                <div>
+                  <span className="px-4 py-2 inline-block bg-gray-300 rounded-lg">
+                    Loading...
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : messages.length > 0 ? (
           <>
             {messagesGroupedBySender.map((group, key) => (
               <div key={key} className="chat-message">
@@ -126,6 +214,9 @@ export default function Conversation({
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-full h-12 w-12 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none"
+              onClick={() => {
+                alert("Not implemented yet");
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -152,9 +243,20 @@ export default function Conversation({
             className="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-full py-3"
           />
           <div className="absolute right-0 items-center inset-y-0 hidden sm:flex">
+            <input
+              ref={fileInputRef}
+              type="file"
+              id="file"
+              className="hidden"
+              onChange={handleUploadFile}
+              multiple={false}
+            />
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none"
+              onClick={() => {
+                fileInputRef.current?.click();
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -174,6 +276,9 @@ export default function Conversation({
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none"
+              onClick={() => {
+                alert("Not implemented yet");
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -199,6 +304,9 @@ export default function Conversation({
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none"
+              onClick={() => {
+                alert("Not implemented yet");
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
