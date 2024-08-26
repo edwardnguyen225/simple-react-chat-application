@@ -1,4 +1,9 @@
-export type MessageItem = {
+export interface MessageItem {
+  messageId: string;
+  roomId: string;
+  messageContent: string;
   senderId: string;
-  content: string;
-};
+  createdAt: Date;
+  mediaType: string;
+  mediaUrl: string;
+}

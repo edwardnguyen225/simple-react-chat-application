@@ -97,18 +97,25 @@ function App() {
   };
 
   const sendMessage = (value: string) => {
-    webSocket.current.getConnection(url).send(
-      JSON.stringify({
-        action: "sendMessage",
-        recipientId: targetUser.id,
-        content: value,
-      })
-    );
+    const newMessage = {
+      action: "sendMessage",
+      recipientId: targetUser.id,
+      messageContent: value,
+      // mediaType: 'text',
+      // mediaUrl: '',
+    };
+
+    webSocket.current.getConnection(url).send(JSON.stringify(newMessage));
     setMessages([
       ...messages,
       {
-        content: value,
+        roomId: "000",
+        messageId: Math.random().toString(36).substr(2, 9),
+        messageContent: value,
         senderId: user.id,
+        createdAt: new Date(),
+        mediaType: "",
+        mediaUrl: "",
       },
     ]);
   };

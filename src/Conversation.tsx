@@ -27,7 +27,7 @@ export default function Conversation({
 
   const messagesGroupedBySender = messages.reduce((prev, curr) => {
     if (prev.length > 0 && curr.senderId === prev[prev.length - 1].sender.id) {
-      prev[prev.length - 1].messages.push(curr.content);
+      prev[prev.length - 1].messages.push(curr);
       return prev;
     } else {
       const sender = curr.senderId === me.id ? me : targetUser;
@@ -35,11 +35,11 @@ export default function Conversation({
         ...prev,
         {
           sender,
-          messages: [curr.content],
+          messages: [curr],
         },
       ];
     }
-  }, [] as { sender: User; messages: string[] }[]);
+  }, [] as { sender: User; messages: MessageItem[] }[]);
 
   const submit = () => {
     setMessage("");
@@ -97,7 +97,7 @@ export default function Conversation({
                               : "rounded-br-none bg-blue-600 text-white"
                           }`}
                         >
-                          {message}
+                          {message.messageContent}
                         </span>
                       </div>
                     ))}
