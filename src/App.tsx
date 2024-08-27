@@ -89,8 +89,10 @@ function App() {
     }
 
     if (msg.type === "message") {
-      const item = msg.value as MessageItem;
-      setMessages([...messages, item]);
+      const item = msg.value as {
+        message: MessageItem;
+      };
+      setMessages([...messages, item.message]);
     }
   };
 
