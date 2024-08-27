@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./App.css";
 import Conversation from "./Conversation";
-import { MessageItem } from "./MessageItem";
 import Sidebar from "./Sidebar";
 import { WebSocketConnector } from "./WebSocketConnector";
 import Welcome from "./Welcome";
-import { User } from "./types";
+import { MessageItem, User } from "./types";
 import { mockUsers } from "./mocks";
 import { getRoomIdFromUserIds } from "./utils";
 
@@ -16,7 +15,7 @@ function App() {
   const clients = mockUsers;
 
   const [user, setUser] = useState<User>(
-    JSON.parse(window.localStorage.getItem("user") || "{}"),
+    JSON.parse(window.localStorage.getItem("user") || "{}")
   );
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,7 +39,7 @@ function App() {
         action: "getMessages",
         targetId: target.id,
         limit: 1000,
-      }),
+      })
     );
   };
 
@@ -119,18 +118,8 @@ function App() {
         action: "sendMessage",
         recipientId: targetUser.id,
         ...newMessage,
-      }),
+      })
     );
-    setMessages([
-      ...messages,
-      {
-        ...newMessage,
-        roomId,
-        messageId: Math.random().toString(36).substr(2, 9),
-        senderId: user.id,
-        createdAt: new Date(),
-      },
-    ]);
   };
 
   return (

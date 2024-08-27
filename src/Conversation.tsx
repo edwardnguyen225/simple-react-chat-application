@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Conversation.css";
-import { MessageItem } from "./MessageItem";
-import { User } from "./types";
+import { MessageItem, User } from "./types";
 
 export const API_URL = process.env.REACT_APP_API_URL;
 
