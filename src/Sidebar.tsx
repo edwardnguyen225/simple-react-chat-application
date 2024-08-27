@@ -28,13 +28,14 @@ export default function Sidebar({
                 <button
                   className="flex items-center p-3 bg-white rounded-xl"
                   onClick={() => setTarget(client)}
+                  aria-label={`Select ${client.name}`}
                 >
                   <img
                     src={client.avatar}
                     alt=""
                     className="w-4 sm:w-8 h-10 sm:h-8 rounded-full"
                   />
-                  <div className="flex items-center">
+                  <div className="hidden items-center md:flex">
                     <span className="mr-3 ml-2">{client.name}</span>
                     <span className="text-green-500">
                       <svg width="10" height="10">
