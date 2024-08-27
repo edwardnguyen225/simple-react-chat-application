@@ -16,7 +16,7 @@ function App() {
   const clients = mockUsers;
 
   const [user, setUser] = useState<User>(
-    JSON.parse(window.localStorage.getItem("user") || "{}")
+    JSON.parse(window.localStorage.getItem("user") || "{}"),
   );
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,7 +40,7 @@ function App() {
         action: "getMessages",
         targetId: target.id,
         limit: 1000,
-      })
+      }),
     );
   };
 
@@ -90,9 +90,6 @@ function App() {
 
     if (msg.type === "message") {
       const item = msg.value as MessageItem;
-      if (item.senderId === user.id || item.senderId !== targetUser.id) {
-        return;
-      }
       setMessages([...messages, item]);
     }
   };
@@ -115,11 +112,13 @@ function App() {
       mediaUrl: message.mediaUrl || "",
     };
 
-    webSocket.current.getConnection(url).send(JSON.stringify({
-      action: "sendMessage",
-      recipientId: targetUser.id,
-      ...newMessage
-    }));
+    webSocket.current.getConnection(url).send(
+      JSON.stringify({
+        action: "sendMessage",
+        recipientId: targetUser.id,
+        ...newMessage,
+      }),
+    );
     setMessages([
       ...messages,
       {
